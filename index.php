@@ -46,6 +46,7 @@ function url_title($str, $separator = 'dash', $lowercase = FALSE)
 // Look up other security checks in the docs!
 \OCP\User::checkLoggedIn();
 \OCP\App::checkAppEnabled('youtubedl');
+$user = \OCP\User::getUser();
 
 $tpl = new OCP\Template("youtubedl", "main", "user");
 
@@ -62,20 +63,22 @@ if(isset($_POST['youtube'])){
         preg_match('@<title>(.*?)</title>@si',$sourcecode,$title);
         $name = str_replace(" - youtube","",strtolower($title[1]));
         $name = url_title($name);
-        exec('youtube-dl '.$url.' -o "/var/www/owncloud/data/shibby/files/music/'.$name.'.%(ext)s" --get-filename ',$o);
-        exec('youtube-dl '.$url.' -o "/var/www/owncloud/data/shibby/files/music/'.$name.'.%(ext)s" ');
+        exec('youtube-dl '.$url.' -o "/var/www/owncloud/data/'.$user.'/files/music/'.$name.'.%(ext)s" --get-filename ',$o);
+        exec('youtube-dl '.$url.' -o "/var/www/owncloud/data/'.$user.'/files/music/'.$name.'.%(ext)s" ');
         exec('ffmpeg -i '.$o[0].' -vn -acodec libvorbis "'.$o[0].'.ogg"');
         exec("rm ".$o[0]);
     }else{
         $sourcecode = file_get_contents($url);
         preg_match('@<title>(.*?)</title>@si',$sourcecode,$title);
         $name = str_replace(" - youtube","",strtolower($title[1]));
-        $name = url_title($name);
         //exec('youtube-dl '.$url.' -o "/var/www/owncloud/data/shibby/files/videos/'.$name.'.%(ext)s" --get-filename ',$o);
-        exec('youtube-dl '.$url.' -o "/var/www/owncloud/data/shibby/files/videos/'.$name.'.%(ext)s" ');
+        exec('youtube-dl '.$url.' -o "/var/www/owncloud/data/'.$user.'/files/videos/'.$name.'.%(ext)s" ');
     }
 
     $tpl->assign('msg','ok');
 }
+
+
+//$tpl->assign('msg',$folder);
 
 $tpl->printPage();
