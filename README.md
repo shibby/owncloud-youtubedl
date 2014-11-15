@@ -1,6 +1,7 @@
 # Youtube Dl
 Youtube downloader app for OwnCloud
-Place this app in **owncloud/apps/**
+
+Place **youtubedl** folder in **owncloud/apps/**
 
 # Requirements
 * youtube-dl (For download youtube videos. See [http://rg3.github.io/youtube-dl/download.html](http://rg3.github.io/youtube-dl/download.html) for installing
