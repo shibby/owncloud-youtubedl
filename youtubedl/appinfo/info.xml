@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<info>
+    <id>youtubedl</id>
+    <name>Youtube Dl</name>
+    <description>Youtube downloader for OwnCloud</description>
+    <licence>AGPL</licence>
+    <author>Guven Atbakan</author>
+    <version>0.0.1</version>
+    <requiremin>7</requiremin>
+    <documentation>
+        <user>https://github.com/shibby/owncloud-youtubedl/blob/master/README.md</user>
+        <admin>https://github.com/shibby/owncloud-youtubedl/blob/master/README.md</admin>
+    </documentation>
+    <website>https://github.com/shibby/owncloud-youtubedl</website>
+</info>
