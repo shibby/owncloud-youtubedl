@@ -31,10 +31,14 @@ class Application extends App {
 			return new PageController(
 				$c->query('AppName'), 
 				$c->query('Request'),
-				$c->query('UserId')
+				$c->query('UserId'),
+                $c->query('Config')
 			);
 		});
 
+        $container->registerService('Config', function($c) {
+            return $c->query('ServerContainer')->getConfig();
+        });
 
 		/**
 		 * Core

@@ -19,7 +19,7 @@
     </label>
     <select id="dir">
         <?php foreach($_['dirs'] as $dir):?>
-            <option value="<?=$dir;?>"><?=$dir;?></option>
+            <option value="<?=$dir;?>" <?=($dir == $_['lastDir'])?'selected="selected"':'';?>><?=$dir;?></option>
         <?php endforeach;?>
     </select>
 </p>

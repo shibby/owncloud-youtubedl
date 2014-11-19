@@ -11,7 +11,6 @@
 
 namespace OCA\YoutubeDl\Controller;
 
-
 use \OCP\IRequest;
 use \OCP\AppFramework\Http\TemplateResponse;
 use \OCP\AppFramework\Controller;
@@ -37,13 +36,11 @@ class PageController extends Controller {
      * @NoCSRFRequired
      */
     public function index() {
-
         $params = array(
             'user' => $this->userId,
-            'dirs' => $this->array_flatten($this->listdir())
+            'dirs' => $this->array_flatten($this->listdir()),
+            'lastDir' => \OCP\Config::getUserValue($this->userId,$this->appName,'lastDir','')
         );
-
-        //TODO: GET DEFAULT OPTIONS, SUCH AS DEFAULT DIR
 
         return new TemplateResponse('youtubedl', 'main', $params);  // templates/main.php
     }
@@ -53,7 +50,7 @@ class PageController extends Controller {
      * @NoAdminRequired
      */
     public function doDownload($url,$mp3,$dir) {
-        //TODO: SET DEFAULT OPTIONS, SUCH AS DEFAULT DIR
+        \OCP\Config::setUserValue($this->userId,$this->appName,'lastDir',$dir);
         $output='';$filename='';
         if(empty($url)){
             $status = 'error';
@@ -71,11 +68,11 @@ class PageController extends Controller {
             }else{
                 //If there is any problem about getting file name, we will urlize it and download it.
                 $fileFullName = trim($process->getOutput());
-                $fileFullName = explode('.',$fileFullName);
+                $path_parts = pathinfo($fileFullName);
 
-                $fileName = $fileFullName[count($fileFullName)-2];
-                $fileNameUrlize = strtolower( preg_replace( array( '/[^-a-zA-Z0-9\s]/', '/[\s]/' ), array( '', '-' ), $fileName ) ); //TODO: Make this function better.
-                $fileExtension = $fileFullName[count($fileFullName)-1];
+                $fileName = $path_parts['filename'];
+                $fileNameUrlize = preg_replace( array( '/[^ a-zA-Z0-9\.-_\s]/', '/[\s]/' ), array( '', '-' ), $path_parts['filename'] ); //TODO: Make this function better.
+                $fileExtension = $path_parts['extension'];
                 $fileLocation = 'data/'.$this->userId.'/files'.$dir.'/'.$fileNameUrlize.'.'.$fileExtension;
 
                 $process = new \Symfony\Component\Process\Process('youtube-dl '.$url.' -o "'.$fileLocation.'"');
@@ -108,6 +105,9 @@ class PageController extends Controller {
                          * TODO: Remove file downloaded youtube file with OwnCloud API
                          * */
                         $process = new \Symfony\Component\Process\Process('rm -rf '.$fileLocation);$process->setTimeout(3600);$process->run();
+
+                        //TODO: Rename file with OC API
+                        rename($fileLocation.'.mp3','data/'.$this->userId.'/files'.$dir.'/'.$fileName.'.mp3');
                     }
                     //TODO: RENAME FILE WITH ORIGINAL NAME
                 }
