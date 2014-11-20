@@ -5,6 +5,8 @@
 		></button>
 	</div>
 	<div id="app-settings-content">
-		<!-- Your settings in here -->
+        <ul>
+            <li><a href="?refreshCache=true">Refresh Folder List (Delete Cache)</a></li>
+        </ul>
 	</div>
 </div>

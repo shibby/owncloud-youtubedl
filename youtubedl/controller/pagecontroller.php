@@ -15,11 +15,16 @@ use \OCP\IRequest;
 use \OCP\AppFramework\Http\TemplateResponse;
 use \OCP\AppFramework\Controller;
 
-class PageController extends Controller {
+use \OC\Files\Filesystem;
+use OC\Cache\UserCache;
+
+class PageController extends Controller
+{
 
     private $userId;
 
-    public function __construct($appName, IRequest $request, $userId){
+    public function __construct($appName, IRequest $request, $userId)
+    {
         parent::__construct($appName, $request);
         $this->userId = $userId;
     }
@@ -35,11 +40,23 @@ class PageController extends Controller {
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function index() {
+    public function index($refreshCache)
+    {
+        $cache = new UserCache();
+        if ($refreshCache == true) {
+            $cache->remove('youtubedl_dirs');
+        }
+        $dirs = (array)json_decode($cache->get('youtubedl_dirs'));
+        if(!$dirs){
+            $dirs = $this->array_flatten($this->listdir());
+            $cache->set('youtubedl_dirs',json_encode($dirs));
+        }
+
+
         $params = array(
             'user' => $this->userId,
-            'dirs' => $this->array_flatten($this->listdir()),
-            'lastDir' => \OCP\Config::getUserValue($this->userId,$this->appName,'lastDir','')
+            'dirs' => $dirs,
+            'lastDir' => \OCP\Config::getUserValue($this->userId, $this->appName, 'lastDir', '')
         );
 
         return new TemplateResponse('youtubedl', 'main', $params);  // templates/main.php
@@ -49,46 +66,48 @@ class PageController extends Controller {
      * Simply method that posts back the payload of the request
      * @NoAdminRequired
      */
-    public function doDownload($url,$mp3,$dir) {
-        \OCP\Config::setUserValue($this->userId,$this->appName,'lastDir',$dir);
-        $output='';$filename='';
-        if(empty($url)){
+    public function doDownload($url, $mp3, $dir)
+    {
+        \OCP\Config::setUserValue($this->userId, $this->appName, 'lastDir', $dir);
+        $output = '';
+        $filename = '';
+        if (empty($url)) {
             $status = 'error';
             $message = '';
-        }else{
-            require_once __DIR__.'/../vendor/autoload.php';
+        } else {
+            require_once __DIR__ . '/../vendor/autoload.php';
             // First, we will try to get file extension.
-            $process = new \Symfony\Component\Process\Process('youtube-dl '.$url.' -o "%(title)s.%(ext)s" --get-filename');
+            $process = new \Symfony\Component\Process\Process('youtube-dl ' . $url . ' -o "%(title)s.%(ext)s" --get-filename');
             $process->setTimeout(3600);
             $process->run();
             if (!$process->isSuccessful()) {
                 $output = $process->getErrorOutput();
                 $status = 'error';
                 $message = 'URL Error.';
-            }else{
+            } else {
                 //If there is any problem about getting file name, we will urlize it and download it.
                 $fileFullName = trim($process->getOutput());
                 $path_parts = pathinfo($fileFullName);
 
                 $fileName = $path_parts['filename'];
-                $fileNameUrlize = preg_replace( array( '/[^ a-zA-Z0-9\.-_\s]/', '/[\s]/' ), array( '', '-' ), $path_parts['filename'] ); //TODO: Make this function better.
+                $fileNameUrlize = preg_replace(array('/[^ a-zA-Z0-9\.-_\s]/', '/[\s]/'), array('', '-'), $path_parts['filename']); //TODO: Make this function better.
                 $fileExtension = $path_parts['extension'];
-                $fileLocation = 'data/'.$this->userId.'/files'.$dir.'/'.$fileNameUrlize.'.'.$fileExtension;
+                $fileLocation = 'data/' . $this->userId . '/files' . $dir . '/' . $fileNameUrlize . '.' . $fileExtension;
 
-                $process = new \Symfony\Component\Process\Process('youtube-dl '.$url.' -o "'.$fileLocation.'"');
+                $process = new \Symfony\Component\Process\Process('youtube-dl ' . $url . ' -o "' . $fileLocation . '"');
                 $process->setTimeout(7200);
                 $process->run();
                 if (!$process->isSuccessful()) {
                     $status = 'error';
                     $message = 'Download error';
                     $output = $process->getErrorOutput();
-                }else{
+                } else {
                     $status = 'success';
                     $message = 'File downloaded';
-                    if($mp3 == "on"){
+                    if ($mp3 == "on") {
 
                         /*$process = new \Symfony\Component\Process\Process('ffmpeg -i "data/'.$this->userId.'/files'.$dir.'/'.$filename.'" -vn -acodec libvorbis "'.$filename.'.mp3"');*/
-                        $process = new \Symfony\Component\Process\Process('avconv -i '.$fileLocation.' -vn -y '.$fileLocation.'.mp3');
+                        $process = new \Symfony\Component\Process\Process('avconv -i ' . $fileLocation . ' -vn -y ' . $fileLocation . '.mp3');
                         $process->setTimeout(3600);
                         $process->run();
                         if (!$process->isSuccessful()) {
@@ -96,7 +115,7 @@ class PageController extends Controller {
                             $status = 'error';
                             $message .= ", but couldn't convert to .mp3 and downloaded youtube file deleted.";
                             $output = $process->getErrorOutput();
-                        }else{
+                        } else {
                             $status = 'success';
                             $message .= ", and converted to .mp3";
                         }
@@ -104,10 +123,12 @@ class PageController extends Controller {
                          * Deleting downloaded file, because we converted it to mp3 (or couldnt convert)
                          * TODO: Remove file downloaded youtube file with OwnCloud API
                          * */
-                        $process = new \Symfony\Component\Process\Process('rm -rf '.$fileLocation);$process->setTimeout(3600);$process->run();
+                        $process = new \Symfony\Component\Process\Process('rm -rf ' . $fileLocation);
+                        $process->setTimeout(3600);
+                        $process->run();
 
                         //TODO: Rename file with OC API
-                        rename($fileLocation.'.mp3','data/'.$this->userId.'/files'.$dir.'/'.$fileName.'.mp3');
+                        rename($fileLocation . '.mp3', 'data/' . $this->userId . '/files' . $dir . '/' . $fileName . '.mp3');
                     }
                     //TODO: RENAME FILE WITH ORIGINAL NAME
                 }
@@ -116,28 +137,30 @@ class PageController extends Controller {
 
         }
 
-        return array('status'=>$status,'message'=>$message,'output'=>$output,'filename'=>$fileNameUrlize.'.'.$fileExtension,'url'=>$url);
+        return array('status' => $status, 'message' => $message, 'output' => $output, 'filename' => $fileNameUrlize . '.' . $fileExtension, 'url' => $url);
     }
 
-    function listdir($dir = ""){
-        //TODO: MAKE SOME CACHE!!!!
+    function listdir($dir = "")
+    {
+        $ret = [];
         $dir = stripslashes($dir);
-        $list = \OC\Files\Filesystem::getdirectorycontent($dir);
-        if(sizeof($list)>0){
-            $ret=[];
-            foreach( $list as $i ) {
-                if($i['type'] === 'dir' && $i['name'] !== '.') {
-                    $ret[] = $dir.'/'.$i['name'];
-                    $subs = $this->listdir($dir.'/'.$i['name']);
-                    if(!empty($subs)){
+        $list = Filesystem::getdirectorycontent($dir);
+        if (sizeof($list) > 0) {
+            foreach ($list as $i) {
+                if ($i['type'] === 'dir' && $i['name'] !== '.') {
+                    $ret[] = $dir . '/' . $i['name'];
+                    $subs = $this->listdir($dir . '/' . $i['name']);
+                    if (!empty($subs)) {
                         $ret[] = $subs;
                     }
                 }
             }
-            return $ret;
         }
+        return $ret;
     }
-    function array_flatten($array, $preserve_keys = 1, &$newArray = Array()) {
+
+    function array_flatten($array, $preserve_keys = 1, &$newArray = Array())
+    {
         foreach ($array as $key => $child) {
             if (is_array($child)) {
                 $newArray =& $this->array_flatten($child, $preserve_keys, $newArray);
@@ -149,8 +172,6 @@ class PageController extends Controller {
         }
         return $newArray;
     }
-
-
 
 
 }

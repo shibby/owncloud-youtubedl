@@ -12,5 +12,4 @@ Place **youtubedl** folder in **owncloud/apps/**
 
 # TODO
 * Rename downloaded file's name.
-* Cache for directory listing
 * Use OwnCloud API instead of Symfony Proccess for removing old files.
