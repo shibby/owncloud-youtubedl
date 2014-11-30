@@ -69,7 +69,7 @@ class PageController extends Controller
     public function doDownload($url, $mp3, $dir)
     {
         \OCP\Config::setUserValue($this->userId, $this->appName, 'lastDir', $dir);
-        $output = '';
+        $output = array();
         $filename = '';
         if (empty($url)) {
             $status = 'error';
@@ -77,11 +77,14 @@ class PageController extends Controller
         } else {
             require_once __DIR__ . '/../vendor/autoload.php';
             // First, we will try to get file extension.
-            $process = new \Symfony\Component\Process\Process('youtube-dl ' . $url . ' -o "%(title)s.%(ext)s" --get-filename');
+            $command = 'youtube-dl ' . $url . ' -o "%(title)s.%(ext)s" --get-filename';
+            $process = new \Symfony\Component\Process\Process($command);
             $process->setTimeout(3600);
             $process->run();
+            $output[] = '<strong>Run Command:</strong> ';
+            $output[] = $command;
             if (!$process->isSuccessful()) {
-                $output = $process->getErrorOutput();
+                $output[] = $process->getErrorOutput();
                 $status = 'error';
                 $message = 'URL Error.';
             } else {
@@ -92,29 +95,34 @@ class PageController extends Controller
                 $fileName = $path_parts['filename'];
                 $fileNameUrlize = preg_replace(array('/[^ a-zA-Z0-9\.-_\s]/', '/[\s]/'), array('', '-'), $path_parts['filename']); //TODO: Make this function better.
                 $fileExtension = $path_parts['extension'];
-                $fileLocation = 'data/' . $this->userId . '/files' . $dir . '/' . $fileNameUrlize . '.' . $fileExtension;
+                $fileLocation = \OCP\config::getSystemValue('datadirectory').'/' . $this->userId . '/files' . $dir . '/' . $fileNameUrlize . '.' . $fileExtension;
 
-                $process = new \Symfony\Component\Process\Process('youtube-dl ' . $url . ' -o "' . $fileLocation . '"');
+                $command = 'youtube-dl ' . $url . ' -o "' . $fileLocation . '"';
+                $process = new \Symfony\Component\Process\Process($command);
                 $process->setTimeout(7200);
                 $process->run();
+                $output[] = '<strong>Run Command:</strong> ';
+                $output[] = $command;
                 if (!$process->isSuccessful()) {
                     $status = 'error';
                     $message = 'Download error';
-                    $output = $process->getErrorOutput();
+                    $output[] = $process->getErrorOutput();
                 } else {
                     $status = 'success';
                     $message = 'File downloaded';
                     if ($mp3 == "on") {
 
-                        /*$process = new \Symfony\Component\Process\Process('ffmpeg -i "data/'.$this->userId.'/files'.$dir.'/'.$filename.'" -vn -acodec libvorbis "'.$filename.'.mp3"');*/
-                        $process = new \Symfony\Component\Process\Process('avconv -i ' . $fileLocation . ' -vn -y ' . $fileLocation . '.mp3');
+                        $command = 'avconv -i ' . $fileLocation . ' -vn -y ' . $fileLocation . '.mp3';
+                        $process = new \Symfony\Component\Process\Process($command);
                         $process->setTimeout(3600);
                         $process->run();
+                        $output[] = '<strong>Run Command:</strong> ';
+                        $output[] = $command;
                         if (!$process->isSuccessful()) {
                             //throw new RuntimeException($process->getErrorOutput());
                             $status = 'error';
                             $message .= ", but couldn't convert to .mp3 and downloaded youtube file deleted.";
-                            $output = $process->getErrorOutput();
+                            $output[] = $process->getErrorOutput();
                         } else {
                             $status = 'success';
                             $message .= ", and converted to .mp3";
@@ -123,12 +131,15 @@ class PageController extends Controller
                          * Deleting downloaded file, because we converted it to mp3 (or couldnt convert)
                          * TODO: Remove file downloaded youtube file with OwnCloud API
                          * */
-                        $process = new \Symfony\Component\Process\Process('rm -rf ' . $fileLocation);
+                        $command = 'rm -rf ' . $fileLocation;
+                        $process = new \Symfony\Component\Process\Process($command);
                         $process->setTimeout(3600);
                         $process->run();
+                        $output[] = '<strong>Run Command:</strong> ';
+                        $output[] = $command;
 
                         //TODO: Rename file with OC API
-                        rename($fileLocation . '.mp3', 'data/' . $this->userId . '/files' . $dir . '/' . $fileName . '.mp3');
+                        rename($fileLocation . '.mp3', \OCP\config::getSystemValue('datadirectory').'/' . $this->userId . '/files' . $dir . '/' . $fileName . '.mp3');
                     }
                     //TODO: RENAME FILE WITH ORIGINAL NAME
                 }
@@ -142,7 +153,7 @@ class PageController extends Controller
 
     function listdir($dir = "")
     {
-        $ret = [];
+        $ret = array();
         $dir = stripslashes($dir);
         $list = Filesystem::getdirectorycontent($dir);
         if (sizeof($list) > 0) {

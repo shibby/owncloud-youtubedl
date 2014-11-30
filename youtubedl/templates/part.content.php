@@ -25,6 +25,11 @@
 </p>
 <p><button id="download">Download</button></p>
 
-<div id="echo-result">
+<div id="echo-result"></div>
 
+<div id="echo-debug-button" style="display: none;">
+    <p>
+        <a href="javascript:;" id="showDebug" style="text-decoration: underline;">Show Debug</a>
+    </p>
 </div>
+<div id="echo-debug-content" style="display: none;"></div>
