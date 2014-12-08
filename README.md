@@ -8,7 +8,7 @@ Place **youtubedl** folder in **owncloud/apps/**
 * avconv (Required for converting downloaded file to mp3. Install with **sudo apt-get install libav-tools** )
 
 # ChangeLog
-* Please visit: (http://apps.owncloud.com/content/show.php?content=167888)[http://apps.owncloud.com/content/show.php?content=167888]
+* Please visit: [http://apps.owncloud.com/content/show.php?content=167888](http://apps.owncloud.com/content/show.php?content=167888)
 
 # TODO
 * Rename downloaded file's name.
