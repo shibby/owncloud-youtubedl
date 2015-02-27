@@ -4,7 +4,7 @@ Youtube downloader app for OwnCloud
 Place **youtubedl** folder in **owncloud/apps/**
 
 # Requirements
-* youtube-dl (Required for download youtube videos. See [http://rg3.github.io/youtube-dl/download.html](http://rg3.github.io/youtube-dl/download.html) for installing)
+* youtube-dl (Required for download youtube videos. See [http://rg3.github.io/youtube-dl/download.html](http://rg3.github.io/youtube-dl/download.html) for installing. Do not install with your package manager such as apt-get.)
 * avconv (Required for converting downloaded file to mp3. Install with **sudo apt-get install libav-tools** )
 
 # ChangeLog
@@ -14,3 +14,4 @@ Place **youtubedl** folder in **owncloud/apps/**
 * Rename downloaded file's name.
 * Use OwnCloud API instead of Symfony Proccess for removing old files.
 * Add a progressbar.
+* Make ffmpeg usable.

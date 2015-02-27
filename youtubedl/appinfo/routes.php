@@ -24,4 +24,5 @@ $application = new Application();
 $application->registerRoutes($this, array('routes' => array(
 	array('name' => 'page#index', 'url' => '/', 'verb' => 'GET'),
     array('name' => 'page#do_download', 'url' => '/download', 'verb' => 'POST'),
+    array('name' => 'page#do_updateyoutubedl', 'url' => '/updateyoutubedl', 'verb' => 'POST'),
 )));

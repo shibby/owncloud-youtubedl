@@ -1,4 +1,4 @@
 # Authors
 
-* Guven Atbakan: <guvenatbakan@gmail.com>
+* Guven Atbakan: <guven@atbakan.com>
 

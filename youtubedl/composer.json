@@ -1,5 +1,5 @@
 {
     "require": {
-        "symfony/process": "~2.5"
+        "symfony/process": "*"
     }
 }

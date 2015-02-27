@@ -37,21 +37,22 @@ class PageController extends Controller
      *          basically the only required method to add this exemption, don't
      *          add it to any other method if you don't exactly know what it does
      *
+     * @var string $action
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function index($refreshCache)
+    public function index($action)
     {
         $cache = new UserCache();
-        if ($refreshCache == true) {
+        if ($action == "refreshCache") {
             $cache->remove('youtubedl_dirs');
         }
-        $dirs = (array)json_decode($cache->get('youtubedl_dirs'));
-        if(!$dirs){
-            $dirs = $this->array_flatten($this->listdir());
-            $cache->set('youtubedl_dirs',json_encode($dirs));
-        }
 
+        $dirs = (array)json_decode($cache->get('youtubedl_dirs'));
+        if (!$dirs) {
+            $dirs = $this->array_flatten($this->listdir());
+            $cache->set('youtubedl_dirs', json_encode($dirs));
+        }
 
         $params = array(
             'user' => $this->userId,
@@ -95,7 +96,7 @@ class PageController extends Controller
                 $fileName = $path_parts['filename'];
                 $fileNameUrlize = preg_replace(array('/[^ a-zA-Z0-9\.-_\s]/', '/[\s]/'), array('', '-'), $path_parts['filename']); //TODO: Make this function better.
                 $fileExtension = $path_parts['extension'];
-                $fileLocation = \OCP\config::getSystemValue('datadirectory').'/' . $this->userId . '/files' . $dir . '/' . $fileNameUrlize . '.' . $fileExtension;
+                $fileLocation = \OCP\config::getSystemValue('datadirectory') . '/' . $this->userId . '/files' . $dir . '/' . $fileNameUrlize . '.' . $fileExtension;
 
                 $command = 'youtube-dl ' . $url . ' -o "' . $fileLocation . '"';
                 $process = new \Symfony\Component\Process\Process($command);
@@ -139,7 +140,7 @@ class PageController extends Controller
                         $output[] = $command;
 
                         //TODO: Rename file with OC API
-                        rename($fileLocation . '.mp3', \OCP\config::getSystemValue('datadirectory').'/' . $this->userId . '/files' . $dir . '/' . $fileName . '.mp3');
+                        rename($fileLocation . '.mp3', \OCP\config::getSystemValue('datadirectory') . '/' . $this->userId . '/files' . $dir . '/' . $fileName . '.mp3');
                     }
                     //TODO: RENAME FILE WITH ORIGINAL NAME
                 }
@@ -149,6 +150,63 @@ class PageController extends Controller
         }
 
         return array('status' => $status, 'message' => $message, 'output' => $output, 'filename' => $fileNameUrlize . '.' . $fileExtension, 'url' => $url);
+    }
+
+    /**
+     * Youtube dl update function
+     * @NoAdminRequired
+     */
+    public function doUpdateyoutubedl()
+    {
+        require_once __DIR__ . '/../vendor/autoload.php';
+
+        /* First getting current version of youtube-dl */
+        $command = 'youtube-dl --version';
+        $process = new \Symfony\Component\Process\Process($command);
+        $process->setTimeout(3600);
+        $process->run();
+        $output[] = '<strong>Run Command:</strong> ';
+        $output[] = $command;
+        if (!$process->isSuccessful()) {
+            $output[] = $process->getErrorOutput();
+            $status = 'error';
+            $message = 'Couldn\'t fetch version.';
+        } else {
+            $output[] = '<strong>Old Version:</strong> '.$process->getOutput();
+
+            $command = 'youtube-dl -U';
+            $process = new \Symfony\Component\Process\Process($command);
+            $process->setTimeout(3600);
+            $process->run();
+            $output[] = '<strong>Run Command:</strong> ';
+            $output[] = $command;
+            if (!$process->isSuccessful()) {
+                $output[] = $process->getErrorOutput();
+                $status = 'error';
+                $message = 'Update Error.';
+            } else {
+                $updateOutput = $process->getOutput();
+                if(substr_count($updateOutput,'no write permissions') > 0){
+                    $status = 'error';
+                    $message = 'Youtube-dl couldnt update because of permission error. Connect with SSH and use "youtube-dl -U" command. ';
+                }else{
+                    $status = 'success';
+                    $message = 'Youtube-dl update function applied. See output.';
+                }
+                $output[] = $updateOutput;
+
+                /* Getting new version of youtube-dl */
+                $command = 'youtube-dl --version';
+                $process = new \Symfony\Component\Process\Process($command);
+                $process->setTimeout(3600);
+                $process->run();
+                $output[] = '<strong>Run Command:</strong> ';
+                $output[] = $command;
+                $output[] = '<strong>New Version:</strong> '.$process->getOutput();
+            }
+        }
+
+        return array('status' => $status, 'message' => $message, 'output' => $output);
     }
 
     function listdir($dir = "")

@@ -41,6 +41,31 @@
 			});
 			
 		});
+        $('#updateLink').click(function () {
+            $('#echo-debug-content').text('');
+            $('#echo-debug-content').slideUp();
+            $('#echo-debug-button').hide();
+
+            $('#echo-result').text('Youtube-dl updating, please wait...');
+			var url = OC.generateUrl('/apps/youtubedl/updateyoutubedl');
+			var data = {
+
+			};
+
+			$.post(url, data).success(function (response) {
+                $('#echo-result').text('');
+				$('#echo-result').append("<strong>Update Result:</strong>"+response.status);
+				$('#echo-result').append("<br/>"+response.message);
+
+                $('#echo-debug-button').show();
+                $(response.output).each(function (i) {
+                    $('#echo-debug-content').append(response.output[i]);
+                    $('#echo-debug-content').append("<br/>");
+                });
+
+			});
+
+		});
 
         $('#showDebug').click(function(){
             $('#echo-debug-content').slideDown();

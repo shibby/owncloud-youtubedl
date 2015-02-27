@@ -1,3 +1,8 @@
+(0.0.5)
+* Settings panel always being show.
+* Added "update youtube-dl" option to settings.
+* Update symfony process vendor from 2.5.6 to 2.6.4
+
 (0.0.4)
 * Added more debug options.
 * Iplement for if data folder different from default

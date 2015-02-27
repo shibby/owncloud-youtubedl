@@ -1,28 +1,28 @@
 [
     {
         "name": "symfony/process",
-        "version": "v2.5.6",
-        "version_normalized": "2.5.6.0",
+        "version": "v2.6.4",
+        "version_normalized": "2.6.4.0",
         "target-dir": "Symfony/Component/Process",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/Process.git",
-            "reference": "9bbacbb3a7a27b17c0d51e2f126f59e0e588ad3a"
+            "reference": "ecfc23e89d9967999fa5f60a1e9af7384396e9ae"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/Process/zipball/9bbacbb3a7a27b17c0d51e2f126f59e0e588ad3a",
-            "reference": "9bbacbb3a7a27b17c0d51e2f126f59e0e588ad3a",
+            "url": "https://api.github.com/repos/symfony/Process/zipball/ecfc23e89d9967999fa5f60a1e9af7384396e9ae",
+            "reference": "ecfc23e89d9967999fa5f60a1e9af7384396e9ae",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.3"
         },
-        "time": "2014-10-01 05:50:18",
+        "time": "2015-01-25 04:39:26",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "2.5-dev"
+                "dev-master": "2.6-dev"
             }
         },
         "installation-source": "dist",
