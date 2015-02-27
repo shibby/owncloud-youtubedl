@@ -112,7 +112,10 @@ class PageController extends Controller
                     $status = 'success';
                     $message = 'File downloaded';
                     if ($mp3 == "on") {
-
+                        /* There was a bug in the avconv console command with blank character fileLocations
+						* You have to escape them
+						*/
+						$fileLocation = str_replace(" ","\ ",$fileLocation);
                         $command = 'avconv -i ' . $fileLocation . ' -vn -y ' . $fileLocation . '.mp3';
                         $process = new \Symfony\Component\Process\Process($command);
                         $process->setTimeout(3600);
