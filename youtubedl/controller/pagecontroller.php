@@ -113,10 +113,10 @@ class PageController extends Controller
                     $message = 'File downloaded';
                     if ($mp3 == "on") {
                         /* There was a bug in the avconv console command with blank character fileLocations
-						* You have to escape them
+						* so we quote our parameters for shell
 						*/
-						$fileLocation = str_replace(" ","\ ",$fileLocation);
-                        $command = 'avconv -i ' . $fileLocation . ' -vn -y ' . $fileLocation . '.mp3';
+						//$fileLocation = str_replace(" ","\ ",$fileLocation);
+                        $command = 'avconv -i "' . $fileLocation . '" -vn -y "' . $fileLocation . '.mp3"';
                         $process = new \Symfony\Component\Process\Process($command);
                         $process->setTimeout(3600);
                         $process->run();
@@ -135,7 +135,7 @@ class PageController extends Controller
                          * Deleting downloaded file, because we converted it to mp3 (or couldnt convert)
                          * TODO: Remove file downloaded youtube file with OwnCloud API
                          * */
-                        $command = 'rm -rf ' . $fileLocation;
+                        $command = 'rm -rf "' . $fileLocation . '"';
                         $process = new \Symfony\Component\Process\Process($command);
                         $process->setTimeout(3600);
                         $process->run();
