@@ -78,7 +78,7 @@ class PageController extends Controller
         } else {
             require_once __DIR__ . '/../vendor/autoload.php';
             // First, we will try to get file extension.
-            $command = 'youtube-dl ' . $url . ' -o "%(title)s.%(ext)s" --get-filename';
+            $command = 'youtube-dl \'' . $url . '\' -o "%(title)s.%(ext)s" --get-filename --no-playlist';
             $process = new \Symfony\Component\Process\Process($command);
             $process->setTimeout(3600);
             $process->run();
@@ -98,7 +98,7 @@ class PageController extends Controller
                 $fileExtension = $path_parts['extension'];
                 $fileLocation = \OCP\config::getSystemValue('datadirectory') . '/' . $this->userId . '/files' . $dir . '/' . $fileNameUrlize . '.' . $fileExtension;
 
-                $command = 'youtube-dl ' . $url . ' -o "' . $fileLocation . '"';
+                $command = 'youtube-dl \'' . $url . '\' --no-playlist -o "' . $fileLocation . '"';
                 $process = new \Symfony\Component\Process\Process($command);
                 $process->setTimeout(7200);
                 $process->run();
