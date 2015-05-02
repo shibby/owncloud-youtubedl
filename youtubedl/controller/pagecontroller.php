@@ -106,8 +106,8 @@ class PageController extends Controller
                 $process->setTimeout(7200);
                 $process->run();
                 $output[] = '<strong>Run Command:</strong> ';
-                $output[] = $command . 'fileLocation: ' . $fileLocation . 'fileName:' . $fileName;
-				$output[] = $fileLocation;
+                $output[] = $command;
+		$output[] = $fileLocation;
                 if (!$process->isSuccessful()) {
                     $status = 'error';
                     $message = 'Download error';
