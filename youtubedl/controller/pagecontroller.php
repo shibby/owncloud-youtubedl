@@ -14,7 +14,6 @@ namespace OCA\YoutubeDl\Controller;
 use \OCP\IRequest;
 use \OCP\AppFramework\Http\TemplateResponse;
 use \OCP\AppFramework\Controller;
-
 use \OC\Files\Filesystem;
 use OC\Cache\UserCache;
 
@@ -78,7 +77,7 @@ class PageController extends Controller
         } else {
             require_once __DIR__ . '/../vendor/autoload.php';
             // First, we will try to get file extension.
-            $command = 'youtube-dl \'' . $url . '\' -o "%(title)s.%(ext)s" --get-filename --no-playlist';
+            $command = 'youtube-dl -i \'' . $url . '\' -o "%(title)s.%(ext)s" --get-filename';	
             $process = new \Symfony\Component\Process\Process($command);
             $process->setTimeout(3600);
             $process->run();
@@ -96,14 +95,19 @@ class PageController extends Controller
                 $fileName = $path_parts['filename'];
                 $fileNameUrlize = preg_replace(array('/[^ a-zA-Z0-9\.-_\s]/', '/[\s]/'), array('', '-'), $path_parts['filename']); //TODO: Make this function better.
                 $fileExtension = $path_parts['extension'];
-                $fileLocation = \OCP\config::getSystemValue('datadirectory') . '/' . $this->userId . '/files' . $dir . '/' . $fileNameUrlize . '.' . $fileExtension;
+                //get filepath without filename
+                $filePath = \OCP\config::getSystemValue('datadirectory') . '/' . $this->userId . '/files' . $dir . '/';
+		//filepath with filename
+		$fileLocation = \OCP\config::getSystemValue('datadirectory') . '/' . $this->userId . '/files' . $dir . '/' . $fileNameUrlize . '.' . $fileExtension;
 
-                $command = 'youtube-dl \'' . $url . '\' --no-playlist -o "' . $fileLocation . '"';
-                $process = new \Symfony\Component\Process\Process($command);
+                //Downloading playlists now possible - removed --no-playlist command
+		$command = 'youtube-dl -i \'' . $url . '\' -o "' . $filePath . '.ytemp/'  . '%(title)s.%(ext)s"';
+		$process = new \Symfony\Component\Process\Process($command);
                 $process->setTimeout(7200);
                 $process->run();
                 $output[] = '<strong>Run Command:</strong> ';
                 $output[] = $command;
+		$output[] = $fileLocation;
                 if (!$process->isSuccessful()) {
                     $status = 'error';
                     $message = 'Download error';
@@ -116,12 +120,25 @@ class PageController extends Controller
 						* so we quote our parameters for shell
 						*/
 						//$fileLocation = str_replace(" ","\ ",$fileLocation);
-                        $command = 'avconv -i "' . $fileLocation . '" -vn -y "' . $fileLocation . '.mp3"';
-                        $process = new \Symfony\Component\Process\Process($command);
-                        $process->setTimeout(3600);
+
+						
+						//COnvert all files to mp3 
+						//its in 4 vars cause its more eye-friendly for me
+						//for avconv simply change ffmpeg -i to avconv -i
+						$command0 = 'for z in ' . $filePath . '.ytemp/' . '*.mp4; do ';
+						$command1 = 'ffmpeg -i ';
+						$command2 = '"$z" -vn -y "${z%mp4}mp3"; done';
+						$command3 = $command0 . $command1 . $command2;
+						
+						$process = new \Symfony\Component\Process\Process($command3);
+						$process->setTimeout(3600);
+                        $process->run();
+						$command = 'mv ' . $filePath . '.ytemp/* ' .  $filePath . ' && rm -R '. $filePath . '.ytemp/';
+						$process = new \Symfony\Component\Process\Process($command);
+						$process->setTimeout(3600);
                         $process->run();
                         $output[] = '<strong>Run Command:</strong> ';
-                        $output[] = $command;
+                        $output[] = $command3;
                         if (!$process->isSuccessful()) {
                             //throw new RuntimeException($process->getErrorOutput());
                             $status = 'error';
@@ -145,7 +162,11 @@ class PageController extends Controller
                         //TODO: Rename file with OC API
                         rename($fileLocation . '.mp3', \OCP\config::getSystemValue('datadirectory') . '/' . $this->userId . '/files' . $dir . '/' . $fileName . '.mp3');
                     }
-                    //TODO: RENAME FILE WITH ORIGINAL NAME
+                    //Moving files from .ytemp to destination folder
+                $command = 'mv ' . $filePath . '.ytemp/* ' .  $filePath . ' && rm -R '. $filePath . '.ytemp/';
+		$process = new \Symfony\Component\Process\Process($command);
+		$process->setTimeout(3600);
+		$process->run();
                 }
 
             }
