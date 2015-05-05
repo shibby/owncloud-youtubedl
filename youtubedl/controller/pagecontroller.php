@@ -128,7 +128,7 @@ class PageController extends Controller
 						
 						//$command = 'ffmpeg -i "' . $fileLocation . '" -vn -y "' . $fileLocation . '.mp3"';
 						$command0 = 'for z in ' . $filePath . '.ytemp/' . '*.mp4; do ';
-						$command1 = 'ffmpeg -i ';
+						$command1 = 'avconv -i ';
 						$command2 = '"$z" -vn -y "${z%mp4}mp3"; done';
 						$command3 = $command0 . $command1 . $command2;
 						
