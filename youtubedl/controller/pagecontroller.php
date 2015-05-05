@@ -40,11 +40,17 @@ class PageController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function index($action)
+    public function index($action,$secondParameter)
     {
         $cache = new UserCache();
-        if ($action == "refreshCache") {
+        if ($action === "refreshCache") {
             $cache->remove('youtubedl_dirs');
+        }elseif ($action === "changeConverter") {
+            if($secondParameter === "avconv"){
+                \OCP\Config::setAppValue($this->appName,'converter','avconv');
+            }elseif($secondParameter === "ffmpeg"){
+                \OCP\Config::setAppValue($this->appName,'converter','ffmpeg'); 
+            }
         }
 
         $dirs = (array)json_decode($cache->get('youtubedl_dirs'));
@@ -56,7 +62,8 @@ class PageController extends Controller
         $params = array(
             'user' => $this->userId,
             'dirs' => $dirs,
-            'lastDir' => \OCP\Config::getUserValue($this->userId, $this->appName, 'lastDir', '')
+            'lastDir' => \OCP\Config::getUserValue($this->userId, $this->appName, 'lastDir', ''),
+            'converter' => \OCP\Config::getAppValue($this->appName,'converter','avconv') //use default avconv
         );
 
         return new TemplateResponse('youtubedl', 'main', $params);  // templates/main.php
@@ -68,6 +75,7 @@ class PageController extends Controller
      */
     public function doDownload($url, $mp3, $dir)
     {
+        $converter = \OCP\Config::getAppValue($this->appName,'converter','avconv');
         \OCP\Config::setUserValue($this->userId, $this->appName, 'lastDir', $dir);
         $output = array();
         $filename = '';
@@ -109,7 +117,7 @@ class PageController extends Controller
                 $process->setTimeout(7200);
                 $process->run();
                 $output[] = '<strong>Run Command:</strong> ';
-                $output[] = $command . 'fileLocation: ' . $fileLocation . 'fileName:' . $fileName;
+                $output[] = $command . "\nfileLocation: " . $fileLocation . "\nfileName:" . $fileName;
 				$output[] = $fileLocation;
                 if (!$process->isSuccessful()) {
                     $status = 'error';
@@ -128,7 +136,7 @@ class PageController extends Controller
 						
 						//$command = 'ffmpeg -i "' . $fileLocation . '" -vn -y "' . $fileLocation . '.mp3"';
 						$command0 = 'for z in ' . $filePath . '.ytemp/' . '*.mp4; do ';
-						$command1 = 'ffmpeg -i ';
+						$command1 = $converter.' -i ';
 						$command2 = '"$z" -vn -y "${z%mp4}mp3"; done';
 						$command3 = $command0 . $command1 . $command2;
 						
@@ -154,7 +162,7 @@ class PageController extends Controller
                          * Deleting downloaded file, because we converted it to mp3 (or couldnt convert)
                          * TODO: Remove file downloaded youtube file with OwnCloud API
                          * */
-                        $command = 'rm -rf "' . $fileLocation . '"';
+                        $command = 'rm -rf '. $filePath . '.ytemp/*.mp4';
                         $process = new \Symfony\Component\Process\Process($command);
                         $process->setTimeout(3600);
                         $process->run();
@@ -169,6 +177,8 @@ class PageController extends Controller
 					$process = new \Symfony\Component\Process\Process($command);
 					$process->setTimeout(3600);
 					$process->run();
+                    $output[] = '<strong>Run Command:</strong> ';
+                    $output[] = $command;
                 }
 
             //} this bracket belongs to the removed else statement
