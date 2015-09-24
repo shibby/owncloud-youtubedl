@@ -6,9 +6,9 @@
         <ul>
             <li><a href="javascript:;" id="updateLink">Update Youtube-DL</a></li>
         </ul>
-        <ul>
+        <!--<ul>
             <li><a href="?action=refreshCache">Refresh Folder List (Delete Cache)</a></li>
-        </ul>
+        </ul>-->
         <!--
         <ul>
             <li><a href="?refreshCache=true">Use ffmpeg instead of avconv</a></li>

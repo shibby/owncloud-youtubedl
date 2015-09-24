@@ -33,3 +33,8 @@
     </p>
 </div>
 <div id="echo-debug-content" style="display: none;"></div>
+
+<p>Note from developer of this addon:
+Hello everyone, i like this plugin as you :) But i don't have any time to develop this plugin because of my work and other projects :(<br>
+    I'm sorry about that. Thanks for your interest.
+</p>

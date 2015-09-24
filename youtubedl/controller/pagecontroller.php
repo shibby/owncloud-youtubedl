@@ -15,7 +15,7 @@ use \OCP\IRequest;
 use \OCP\AppFramework\Http\TemplateResponse;
 use \OCP\AppFramework\Controller;
 use \OC\Files\Filesystem;
-use OC\Cache\UserCache;
+/*use OC\Cache\UserCache;*/
 
 class PageController extends Controller
 {
@@ -42,16 +42,16 @@ class PageController extends Controller
      */
     public function index($action)
     {
-        $cache = new UserCache();
+        /*$cache = new UserCache();
         if ($action == "refreshCache") {
             $cache->remove('youtubedl_dirs');
-        }
+        }*/
 
-        $dirs = (array)json_decode($cache->get('youtubedl_dirs'));
+        /*$dirs = (array)json_decode($cache->get('youtubedl_dirs'));
         if (!$dirs) {
-            $dirs = $this->array_flatten($this->listdir());
             $cache->set('youtubedl_dirs', json_encode($dirs));
-        }
+        }*/
+        $dirs = $this->array_flatten($this->listdir());
 
         $params = array(
             'user' => $this->userId,
